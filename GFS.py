@@ -26,7 +26,7 @@ class Node():
         return copy.deepcopy(self)
 
     def print_node(self):
-        print(f"Features in node: {self.features} | Score: {self.score}\n")
+        print(f"Using feature(s): {self.features} | Accuracy is: {self.score*100}%\n")
     
 def dummy_evaluation(features):
     return round(random.uniform(0.0, 1.0), 4)
@@ -47,22 +47,22 @@ def GFS(num_features):
     print(f"#####################\n")
 
 
-    for _ in range(1, 50): #fix this to be a while loop that terminates at SOME points idk maybe the threshold value
+    for _ in range(0, num_features): #fix this to be a while loop that terminates at SOME points idk maybe the threshold value
 
         current_tree_level = []
 
-        for feature in range(0, num_features):
+        for feature in range(1, num_features+1):
             #here i wanna add every feature thats not the current feature to the level
             temp = best_features.get_features()
 
-            for i in range(1, len(temp)-1):
-                if feature != temp[i]:
-                    temp_node = individual_scores[i].copy_node()
-                    temp_node.add_features(feature)
-                    temp_node.set_score(dummy_evaluation(temp_node.get_features()))
+            #check for membership of feature in temp
+            if feature not in temp:
+                temp_node = best_features.copy_node()
+                temp_node.add_features(feature)
+                temp_node.set_score(dummy_evaluation(temp_node.get_features()))
 
-                    current_tree_level.append(temp_node)
-                    temp_node.print_node()
+                current_tree_level.append(temp_node)
+                temp_node.print_node()
 
         #finished creating the tree level, if its empty that means we plateued?
         length = len(current_tree_level)
@@ -74,6 +74,14 @@ def GFS(num_features):
         local_max = current_tree_level[length-1]
         #now we have a local max & a overall 'best' node -> compare?
         if local_max.get_score() > best_features.get_score():
+            print(f"\nFOUND: {local_max.get_features()}\n")
             best_features = local_max
+        else:
+            print(f"\nDid not find better subset\n")
+            return best_features
 
-GFS(9)
+best_subset = GFS(9)
+
+print(f"##### BEST NODE #####\n")
+best_subset.print_node()
+print(f"#####################\n")
