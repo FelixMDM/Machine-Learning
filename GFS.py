@@ -52,13 +52,13 @@ def GFS(num_features):
         print(f"\n(Warning, Accuracy has decreased!)\n")
         return None
 
-    for _ in range(0, num_features):
+    for _ in range(1, num_features+1):
         #print the performance of the last subset
         print(f"Feature set: {best_features.get_features()} was best, accuracy is {best_features.get_score()*100}%\n")
         current_tree_level = []
 
         #for each feature '_' create a subset of all other features except self, append each node to the array representing the level of this 'tree'
-        for feature in range(0, num_features):
+        for feature in range(1, num_features+1):
             temp = best_features.get_features()
 
             if feature not in temp:

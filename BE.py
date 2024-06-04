@@ -13,6 +13,13 @@ class Node():
     def add_features(self, features):
         self.features.append(features)
 
+    def remove_features(self, feature):
+        for i in range(0, len(self.features)):
+            # print(f"{i}, size: {len(self.features)}")
+            if self.features[i] == feature:
+                self.features.pop(i)
+                return
+
     def get_features(self):
         return self.features
     
@@ -33,10 +40,12 @@ def dummy_evaluation(features):
 
 def BE(num_features):
     individual_scores = []
+    best_features = Node()
 
     #loop through every feature, creating node, assigning score, and appending to array [individual features]
     for i in range(1, num_features+1):
         individual_scores.append(Node(i, dummy_evaluation(i)))
+        best_features.add_features(i)
     individual_scores = sorted(individual_scores, key=lambda node: node.get_score())
     
     #generate random evaluation for using 'zero features' i.e. the default rate
@@ -46,8 +55,8 @@ def BE(num_features):
     print(f"Beginning search.\n")
     for i in range(0, num_features):
         individual_scores[i].print_node()
-        
-    best_features = Node([i for i in range(1, num_features)], dummy_evaluation(num_features))
+    
+    best_features.set_score(dummy_evaluation(best_features.get_features()))
 
     if best_features.get_score() < zero_features:
         print(f"\n(Warning, Accuracy has decreased!)\n")
@@ -59,26 +68,33 @@ def BE(num_features):
         current_tree_level = []
 
         #for each feature '_' create a subset of all other features except self, append each node to the array representing the level of this 'tree'
-        for feature in range(0, num_features):
+        for feature in range(1, num_features+1):
             temp = best_features.get_features()
 
-            if feature not in temp:
-                temp_node = best_features.copy_node()
-                temp_node.add_features(feature)
-                temp_node.set_score(dummy_evaluation(temp_node.get_features()))
+            temp_node = best_features.copy_node()
+            temp_node.remove_features(feature)
+            temp_node.set_score(dummy_evaluation(temp_node.get_features()))
 
-                current_tree_level.append(temp_node)
-                temp_node.print_node()
+            current_tree_level.append(temp_node)
+            temp_node.print_node()
+
+            # if feature not in temp:
+            #     temp_node = best_features.copy_node()
+            #     temp_node.add_features(feature)
+            #     temp_node.set_score(dummy_evaluation(temp_node.get_features()))
+
+            #     current_tree_level.append(temp_node)
+            #     temp_node.print_node()
 
         #sort tree to acces best performing subset
-        length = len(current_tree_level)
-        if length != 0:
+
+        if current_tree_level:
             current_tree_level = sorted(current_tree_level, key=lambda node: node.get_score())
         else:
             return best_features
         
         #if the best performing subset, the local max, outperforms the global max, then we update the global max and continue searching, otherwise break and return
-        local_max = current_tree_level[length-1]
+        local_max = current_tree_level[0]
         if local_max.get_score() > best_features.get_score():
             best_features = local_max
         else:
