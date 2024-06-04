@@ -4,11 +4,10 @@ import copy
 class Node():
     def __init__(self, features=None, score=0):
         if features is None:
-            features = []
+            self.features = []
         else:
-            features = [features]
-        self.features = features
-        self.score = score
+            self.features = features
+            self.score = score
 
     def add_features(self, features):
         self.features.append(features)
@@ -39,13 +38,16 @@ def dummy_evaluation(features):
     return round(random.uniform(0.0, 1.0), 3)
 
 def BE(num_features):
-    individual_scores = []
+    individual_scores = [Node([i for i in range(1, num_features+1)]) for _ in range(num_features)]
     best_features = Node()
 
     #loop through every feature, creating node, assigning score, and appending to array [individual features]
     for i in range(1, num_features+1):
-        individual_scores.append(Node(i, dummy_evaluation(i)))
+        individual_scores[i-1].remove_features(i)
+        individual_scores[i-1].set_score(dummy_evaluation(individual_scores[i-1].get_features()))
         best_features.add_features(i)
+
+    best_features.set_score(dummy_evaluation(best_features.get_features()))
     individual_scores = sorted(individual_scores, key=lambda node: node.get_score())
     
     #generate random evaluation for using 'zero features' i.e. the default rate
@@ -56,13 +58,11 @@ def BE(num_features):
     for i in range(0, num_features):
         individual_scores[i].print_node()
     
-    best_features.set_score(dummy_evaluation(best_features.get_features()))
-
     if best_features.get_score() < zero_features:
         print(f"\n(Warning, Accuracy has decreased!)\n")
         return None
 
-    for _ in range(0, num_features):
+    for _ in range(num_features):
         #print the performance of the last subset
         print(f"Feature set: {best_features.get_features()} was best, accuracy is {best_features.get_score()*100}%\n")
         current_tree_level = []
