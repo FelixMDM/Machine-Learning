@@ -3,11 +3,12 @@ import copy
 
 class Node():
     def __init__(self, features=None, score=0):
-        if features is None:
-            features = []
+        self.features = []
+        # If features is already a list, extend self.features with it, otherwise append
+        if isinstance(features, list):
+            self.features.extend(features)
         else:
-            features = [features]
-        self.features = features
+            self.features.append(features)
         self.score = score
 
     def add_features(self, features):
