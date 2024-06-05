@@ -4,14 +4,20 @@ import copy
 class Node():
     def __init__(self, features=None, score=0):
         if features is None:
-            features = []
+            self.features = []
         else:
-            features = [features]
-        self.features = features
-        self.score = score
+            self.features = features
+            self.score = score
 
     def add_features(self, features):
         self.features.append(features)
+
+    def remove_features(self, feature):
+        for i in range(0, len(self.features)):
+            # print(f"{i}, size: {len(self.features)}")
+            if self.features[i] == feature:
+                self.features.pop(i)
+                return
 
     def get_features(self):
         return self.features
@@ -31,12 +37,17 @@ class Node():
 def dummy_evaluation(features):
     return round(random.uniform(0.0, 1.0), 3)
 
-def GFS(num_features):
-    individual_scores = []
+def BE(num_features):
+    individual_scores = [Node([i for i in range(1, num_features+1)]) for _ in range(num_features)]
+    best_features = Node()
 
     #loop through every feature, creating node, assigning score, and appending to array [individual features]
     for i in range(1, num_features+1):
-        individual_scores.append(Node(i, dummy_evaluation(i)))
+        individual_scores[i-1].remove_features(i)
+        individual_scores[i-1].set_score(dummy_evaluation(individual_scores[i-1].get_features()))
+        best_features.add_features(i)
+
+    best_features.set_score(dummy_evaluation(best_features.get_features()))
     individual_scores = sorted(individual_scores, key=lambda node: node.get_score())
     
     #generate random evaluation for using 'zero features' i.e. the default rate
@@ -46,13 +57,12 @@ def GFS(num_features):
     print(f"Beginning search.\n")
     for i in range(0, num_features):
         individual_scores[i].print_node()
-    best_features = individual_scores[num_features-1].copy_node()
-
+    
     if best_features.get_score() < zero_features:
         print(f"\n(Warning, Accuracy has decreased!)\n")
         return None
 
-    for _ in range(1, num_features+1):
+    for _ in range(num_features):
         #print the performance of the last subset
         print(f"Feature set: {best_features.get_features()} was best, accuracy is {best_features.get_score()*100}%\n")
         current_tree_level = []
@@ -61,31 +71,38 @@ def GFS(num_features):
         for feature in range(1, num_features+1):
             temp = best_features.get_features()
 
-            if feature not in temp:
-                temp_node = best_features.copy_node()
-                temp_node.add_features(feature)
-                temp_node.set_score(dummy_evaluation(temp_node.get_features()))
+            temp_node = best_features.copy_node()
+            temp_node.remove_features(feature)
+            temp_node.set_score(dummy_evaluation(temp_node.get_features()))
 
-                current_tree_level.append(temp_node)
-                temp_node.print_node()
+            current_tree_level.append(temp_node)
+            temp_node.print_node()
+
+            # if feature not in temp:
+            #     temp_node = best_features.copy_node()
+            #     temp_node.add_features(feature)
+            #     temp_node.set_score(dummy_evaluation(temp_node.get_features()))
+
+            #     current_tree_level.append(temp_node)
+            #     temp_node.print_node()
 
         #sort tree to acces best performing subset
-        length = len(current_tree_level)
-        if length != 0:
+
+        if current_tree_level:
             current_tree_level = sorted(current_tree_level, key=lambda node: node.get_score())
         else:
             return best_features
         
         #if the best performing subset, the local max, outperforms the global max, then we update the global max and continue searching, otherwise break and return
-        local_max = current_tree_level[length-1]
+        local_max = current_tree_level[0]
         if local_max.get_score() > best_features.get_score():
             best_features = local_max
         else:
             print(f"\n(Warning, Accuracy has decreased!)\n")
             return best_features
 
-#TODO: implement main function to run algorithms in a better way
-best_subset = GFS(9)
+#TODO: build starting subset as all features, remove one instead of adding one
+best_subset = BE(9)
 if best_subset:
     print(f"Finished search!! The best feature subset is {best_subset.get_features()}, which had an accuracy of {best_subset.get_score()*100}%\n")
 else:
