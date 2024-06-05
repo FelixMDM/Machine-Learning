@@ -50,7 +50,7 @@ def BE(num_features):
 
     best_features.set_score(dummy_evaluation(best_features.get_features()))
     individual_scores = sorted(individual_scores, key=lambda node: node.get_score())
-    
+
     #generate default rate NOTE: I don't think we actually end up using default rate here, rather threshold --will followup
     default_rate = dummy_evaluation(0)
     print(f"\nUsing no features and 'random' evaluation, I get an accuarcy of {default_rate*100}%\n")
@@ -75,9 +75,7 @@ def BE(num_features):
         current_tree_level = []
 
         #populate the 'level' of this tree with Node instances containing feature subsets of [best_features - `some` feature]
-        for feature in range(0, num_features):
-            temp = best_features.get_features()
-
+        for feature in range(0, len(best_features.get_features())):
             temp_node = best_features.copy_node()
             temp_node.remove_features(feature)
             temp_node.set_score(dummy_evaluation(temp_node.get_features()))
@@ -92,7 +90,7 @@ def BE(num_features):
         
         #if the best performing subset, the local max, outperforms the threshold, then we update the global max and continue searching, otherwise break and return
         threshold = 0.95 * best_features.get_score()
-        local_max = current_tree_level[num_features-1]
+        local_max = current_tree_level[len(current_tree_level) - 1]
 
         print(f"Threshold: {threshold} | Local Max: {local_max.get_score()}")
         if local_max.get_score() >= threshold:
@@ -122,7 +120,7 @@ def GFS(num_features):
 
     if best_features.get_score() < zero_features:
         print(f"\n(Warning, Accuracy has decreased!)\n")
-        return None
+        return Node(0, zero_features)
 
     for _ in range(0, num_features):
         #print the performance of the last subset
@@ -155,6 +153,7 @@ def GFS(num_features):
         else:
             print(f"\n(Warning, Accuracy has decreased!)\n")
             return best_features
+    return best_features
 
 def main():
     print(f"Feature Search Algorithms\n")
@@ -166,11 +165,13 @@ def main():
 
     if user_selection == 1:
         best_subset = GFS(features)
-        print(f"Finished search!! The best feature subset is {best_subset.get_features()}, which had an accuracy of {best_subset.get_score()*100}%\n")
+        if best_subset:
+            print(f"Finished search!! The best feature subset is {best_subset.get_features()}, which had an accuracy of {best_subset.get_score()*100}%\n")
 
     if user_selection == 2:
         best_subset = BE(features)
-        print(f"Finished search!! The best feature subset is {best_subset.get_features()}, which had an accuracy of {best_subset.get_score()*100}%\n")
+        if best_subset: 
+            print(f"Finished search!! The best feature subset is {best_subset.get_features()}, which had an accuracy of {best_subset.get_score()*100}%\n")
 
 if __name__ == "__main__":
     main()
