@@ -5,6 +5,7 @@ from collections import Counter
 from operator import itemgetter
 import os
 import math
+import pandas as pd
 
 class Node():
     def __init__(self, features=None, score=0):
@@ -158,6 +159,22 @@ def GFS(data):
 def euclidean_distance(p1, p2):
     return math.dist(p1, p2)
 
+def normalize_data(data):
+    class_labels = data.iloc[:, 0]
+    features = data.iloc[:, 1:]
+    
+    # Calculate means and standard deviations, ignoring NaNs
+    means = features.mean()
+    stds = features.std()
+    
+    # Normalize the features
+    normalized_features = (features - means) / stds
+    
+    # Combine class labels with normalized features
+    normalized_df = pd.concat([class_labels, normalized_features], axis=1)
+    
+    return normalized_df
+
 class NNClassifier:
     trainingData = []
     trainingLabels = []
@@ -168,7 +185,7 @@ class NNClassifier:
 
     
     def Test(self, instance):
-        classification = instance[0]
+        # classification = instance[0]
         instance = np.delete(instance, 0)
         minDist = math.inf
         minPoint = 0
@@ -183,7 +200,10 @@ class LOOValidator:
     def __init__(self, subset, classifier, data):
         self.subset = [0] + subset
         self.classifier = classifier
-        self.data = data
+        self.data = data.to_numpy()
+        # self.subset = [0] + subset
+        # self.classifier = classifier
+        # self.data = data
     
     def validate(self):
         total = 0
@@ -206,19 +226,24 @@ def main():
     print(f"\t2. Backwards Elimination")
     #print(f"\t3. Validate Feature Subset")
     
-    user_selection = int(input("Enter the #(number) of which algorithm you'd like to run: "))
+    user_selection = int(input("\nEnter the #(number) of which algorithm you'd like to run: "))
 
     data_file = input("Type in the name of the file to test: ")
-    data_path = os.path.join(os.getcwd(), data_file)
-    data = np.genfromtxt(data_path)
-    
+    data = pd.read_csv(data_file,sep=r'\s+',header=None)
+    # data_path = os.path.join(os.getcwd(), data_file)
+    # data = np.genfromtxt(data_path)
+
+    # print(f"{data}")
+    normalized_data = normalize_data(data)
+    # print(f"{normalized_data}\n")
+
     if user_selection == 1:
-        best_subset = GFS(data)
+        best_subset = GFS(normalized_data)
         if best_subset:
             print(f"Finished search!! The best feature subset is {best_subset.get_features()}, which had an accuracy of {best_subset.get_score()*100}%\n")
 
     if user_selection == 2:
-        best_subset = BE(data)
+        best_subset = BE(normalized_data)
         if best_subset: 
             print(f"Finished search!! The best feature subset is {best_subset.get_features()}, which had an accuracy of {best_subset.get_score()*100}%\n")
 
